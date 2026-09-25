@@ -1,0 +1,38 @@
+# Changelog
+
+## 1.0.0
+
+- Primera versión pública de OWE Agent System.
+- Donna configurada como agente principal.
+- Nueve agentes en total, todos con modelos `openai/*`.
+- Especialistas SEO, rendimiento, QA, contenido y seguridad bajo solicitud expresa.
+- Flujo visual y Elementor por secciones.
+- Separación de escritorio y responsive.
+- Comando `/wp-environment` sin dependencia de WP-CLI y con detección automática del PHP de LocalWP.
+- Corrección Linux: relaciona `sites.json` con los servicios PHP instalados bajo `/opt/Local` aunque estén en ubicaciones diferentes, y registra diagnósticos locales en `.owe/logs/wp-environment.log`.
+- Corrección Linux: detecta `shared-libs` de LocalWP y configura `LD_LIBRARY_PATH` únicamente al ejecutar `/wp-environment` o Elementor Bridge.
+- Runtime portable: detección de LocalWP, XAMPP/LAMPP, MAMP, WampServer, Laragon y PHP en `PATH`; ejecución dentro de DDEV y Lando; configuración explícita para instalaciones personalizadas.
+- Define `app/public` (la carpeta que contiene `wp-load.php`) como raíz operativa, bloquea instalaciones en una carpeta incorrecta e indica no ejecutar `/init` sobre las reglas administradas de OWE.
+- Elementor Bridge determinista con API de documentos, hash de concurrencia, aislamiento por sección y rollback en memoria ante validación fallida.
+- WordPress Content Bridge determinista para inspeccionar, crear y actualizar contenido nativo, categorías y términos mediante APIs de WordPress, con hashes de concurrencia, verificación posterior y rollback.
+- `wordpress-content` puede aplicar contenido nativo aprobado y enrutar entradas construidas con Elementor a la operación segura de copy del Elementor Bridge.
+- Corrección: se instala una plantilla inerte `current-content.json` y se autorizan sus rutas relativa, prefijada y absoluta para que OpenCode pueda sobrescribirla sin ampliar permisos a otros archivos.
+- WordPress Content Bridge incorpora `apply_batch`: hasta 250 acciones ordenadas para crear contenido nativo, crear términos y asignar taxonomías en una sola ejecución, con prevalidación, referencias internas, detección de duplicados, informe determinista y rollback limitado al lote fallido.
+- `wordpress-content` deja de inspeccionar individualmente contenidos nuevos y prioriza un único lote para encargos repetitivos autorizados.
+- WordPress Content Bridge incorpora `find-term`, una búsqueda de solo lectura por nombre exacto o `slug` dentro de una taxonomía, con resultados deterministas y sin selección arbitraria cuando existen nombres repetidos.
+- Donna asume la planificación y solicita autorización antes de implementar; se elimina `wp-planner`.
+- Instalador, actualizador y validador incluidos.
+- Elementor Bridge incorpora `inspect-content`, una inspección compacta y limitada a una sección que omite estilos y configuración ajena al copy para reducir tokens.
+- Elementor Bridge incorpora `update_widget_content` para actualizar varios campos editoriales aprobados de una sección, con catálogo explícito para widgets oficiales, hashes por campo, HTML seguro, aislamiento estricto y validación posterior.
+- `wordpress-content` actúa como escritor web profesional aplicando las instrucciones editoriales específicas de cada proyecto, sin imponer un brief; exige aprobación del texto en modo estándar y puede insertarlo en modo directo solo con `copy_approval: included`.
+- `PROJECT_CONTEXT.md` permanece fuera del contexto automático: Donna prioriza la tarea actual, lee únicamente una sección cuando hace falta y delega un extracto mínimo; `wordpress-content` no vuelve a leerlo. Los PDF indicados se leen directamente por archivo y páginas relevantes.
+- Se mantiene el total de nueve agentes; no se añadió un agente nuevo para la redacción de copy Elementor.
+- El validador deja de depender de `rg` y comprueba la plantilla inerte y el contrato de la nueva operación.
+- Elementor Bridge incorpora búsqueda exacta de plantillas locales por slug o nombre, inspección compacta e inserción de plantillas `section`, `container` y `page` mediante la API oficial de la biblioteca local.
+- `insert_template` admite inicio, final, antes, después o reemplazo completo; regenera IDs, reescribe referencias internas reconocidas, valida aislamiento y permite aplicar ajustes de página solo tras decisión explícita.
+- Donna resuelve slug, ambigüedades por nombre, posición y ajustes antes del plan; `elementor-desktop-builder` realiza la única mutación autorizada sin reconstruir la plantilla con IA.
+- `check` detecta destinos compatibles donde Editar con Elementor no está habilitado, incluidos tipos personalizados activados en Elementor, y Donna solicita autorización explícita.
+- `enable_elementor_editor` habilita el editor únicamente en destinos vacíos y limpios mediante `set_is_built_with_elementor(true)`, sin convertir contenido ni guardar elementos.
+- Donna ofrece después de cada plan un modo estándar por etapas o un modo directo para todo el plan o partes específicas; la autorización directa expira con la tarea y no elimina validaciones técnicas.
+- Los builders y `wordpress-content` pueden procesar listas cerradas en modo directo sin revisiones intermedias, con hash y operación aislada por destino e informe final conjunto.
+- Elementor Bridge incorpora `inspect-attributes` y `update_page_attributes` para cambiar plantilla registrada, padre y orden sin reinsertar contenido ni modificar el árbol Elementor.

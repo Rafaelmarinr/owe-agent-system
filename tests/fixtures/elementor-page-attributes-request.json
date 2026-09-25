@@ -1,0 +1,15 @@
+{
+  "schema": "owe-elementor-bridge/1.0",
+  "page": "876",
+  "device": "desktop",
+  "operation": "update_page_attributes",
+  "expected_page_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "expected_attributes_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "expected_templates_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "user_confirmed": true,
+  "attributes": {
+    "template": "elementor_header_footer",
+    "parent_id": 0,
+    "menu_order": 4
+  }
+}

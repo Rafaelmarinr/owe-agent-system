@@ -1,0 +1,4 @@
+{
+  "schema": "owe-wordpress-content-bridge/1.0",
+  "operation": "replace_before_use"
+}

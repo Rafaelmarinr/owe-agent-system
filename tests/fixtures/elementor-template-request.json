@@ -1,0 +1,13 @@
+{
+  "schema": "owe-elementor-bridge/1.0",
+  "page": "pintar-cabello",
+  "device": "desktop",
+  "operation": "insert_template",
+  "expected_page_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "requires_pro": false,
+  "template_id": 123,
+  "expected_template_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "position": "append",
+  "target_section_id": "",
+  "apply_page_settings": false
+}

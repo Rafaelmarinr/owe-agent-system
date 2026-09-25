@@ -1,0 +1,54 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "donna",
+  "subagent_depth": 1,
+  "share": "disabled",
+  "enabled_providers": [
+    "openai"
+  ],
+  "instructions": [
+    "AGENTS.md",
+    ".opencode/instructions/*.md"
+  ],
+  "agent": {
+    "build": {
+      "disable": true
+    },
+    "plan": {
+      "disable": true
+    }
+  },
+  "permission": {
+    "*": "ask",
+    "read": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.env.example": "allow",
+      "*wp-config.php": "ask",
+      "*.pem": "deny",
+      "*.key": "deny",
+      "*credentials*": "deny"
+    },
+    "glob": "allow",
+    "grep": "allow",
+    "list": "allow",
+    "question": "allow",
+    "external_directory": "deny",
+    "doom_loop": "ask"
+  },
+  "watcher": {
+    "ignore": [
+      ".git/**",
+      "node_modules/**",
+      "vendor/**",
+      ".owe/logs/**",
+      ".owe/runtime/**",
+      "wp-content/cache/**",
+      "wp-content/uploads/**",
+      "wp-content/upgrade/**",
+      "*.sql",
+      "*.sql.gz"
+    ]
+  }
+}

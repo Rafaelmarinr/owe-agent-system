@@ -1,0 +1,9 @@
+{
+  "schema": "owe-elementor-bridge/1.0",
+  "page": "42",
+  "device": "desktop",
+  "operation": "enable_elementor_editor",
+  "expected_source_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "native_content_policy": "require_empty",
+  "user_confirmed": true
+}

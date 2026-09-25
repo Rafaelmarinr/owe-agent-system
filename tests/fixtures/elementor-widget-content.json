@@ -1,0 +1,21 @@
+{
+  "schema": "owe-elementor-bridge/1.0",
+  "page": "123",
+  "device": "all",
+  "operation": "update_widget_content",
+  "expected_page_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "requires_pro": true,
+  "target_section_id": "abc123",
+  "updates": [
+    {
+      "ref": "def456:title",
+      "expected_content_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "value": "A clear approved heading"
+    },
+    {
+      "ref": "fedcba:tabs:item01:tab_title",
+      "expected_content_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "value": "An approved repeater title"
+    }
+  ]
+}
