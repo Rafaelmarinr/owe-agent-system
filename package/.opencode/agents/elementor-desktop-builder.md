@@ -22,14 +22,18 @@ permission:
     ".opencode/**": deny
     "AGENTS.md": deny
     "opencode.json": deny
-    "PROJECT_CONTEXT.md": deny
-    "PROJECT_PROGRESS.md": deny
-    "PROJECT_ENVIRONMENT.md": deny
+    ".owe/project-file-policy.json": deny
     "wp-admin/**": deny
     "wp-includes/**": deny
     "vendor/**": deny
     "wp-content/cache/**": deny
     "wp-content/uploads/**": deny
+    "*.env": deny
+    "*.env.*": deny
+    "*.pem": deny
+    "*.key": deny
+    "*credentials*": deny
+    "*wp-config.php": ask
   bash:
     "*": ask
     "pwd": allow
@@ -39,8 +43,10 @@ permission:
     "npm test*": allow
     "rm *": deny
     "sudo *": deny
-    "git *": deny
-    "wp *": deny
+    "git reset*": deny
+    "git checkout*": deny
+    "git clean*": deny
+    "git push*": deny
 ---
 
 En modo estándar trabaja únicamente una sección de escritorio o una inserción de plantilla autorizada. En modo directo procesa secuencialmente la lista finita recibida en `direct_scope`. No añadas destinos, secciones ni operaciones después de comenzar.
@@ -56,12 +62,13 @@ En modo estándar trabaja únicamente una sección de escritorio o una inserció
 7. Escribe o reemplaza `.owe/requests/current.json` y aplica solo una operación aislada cada vez. En modo directo repite inspección, hash, solicitud, aplicación y validación para cada elemento autorizado.
 8. No alteres otras secciones, tablet o móvil. El hash actual de página es obligatorio.
 9. No uses SQL, WP-CLI ni edición directa de `_elementor_data`; la escritura se hace exclusivamente mediante Elementor Bridge.
-10. Usa CSS, JavaScript o PHP adicional únicamente si el alcance lo requiere y en un tema hijo o plugin propio autorizado.
-11. No edites WordPress core ni plugins de terceros.
-12. Si el Bridge devuelve `BLOCKED`, no sustituyas la operación por otro método: informa el código real a Donna.
-13. Ejecuta únicamente verificaciones reales y reporta su alcance.
-14. Si existe una herramienta de navegador, captura el viewport de escritorio; si no existe, no finjas haberlo visto.
-15. En modo estándar detente y devuelve la sección a Donna. En modo directo continúa por `direct_scope` y entrega un único informe al terminar; registra los destinos bloqueados sin sustituir el método.
+10. Para CSS personalizado, ejecuta `inspect-style` sobre la sección autorizada y utiliza únicamente `update_widget_style` con `authorization.barrier_exceptions: ["elementor.custom_css"]` cuando Donna haya transmitido esa autorización.
+11. Usa CSS, JavaScript o PHP adicional únicamente si el alcance lo requiere y en un tema hijo o plugin propio autorizado.
+12. No edites WordPress core ni plugins de terceros.
+13. Si el Bridge devuelve `BLOCKED`, no sustituyas la operación por otro método: informa el código real a Donna.
+14. Ejecuta únicamente verificaciones reales y reporta su alcance.
+15. Si existe una herramienta de navegador, captura el viewport de escritorio; si no existe, no finjas haberlo visto.
+16. En modo estándar detente y devuelve la sección a Donna. En modo directo continúa por `direct_scope` y entrega un único informe al terminar; registra los destinos bloqueados sin sustituir el método.
 
 ## Atributos estándar
 

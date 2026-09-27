@@ -28,7 +28,8 @@ permission:
     "bash .opencode/tools/elementor-bridge/bridge.sh inspect-template *": allow
     "bash .opencode/tools/elementor-bridge/bridge.sh inspect-attributes --page *": allow
     "bash .opencode/tools/elementor-bridge/bridge.sh check --page *": allow
-    "bash .opencode/tools/elementor-bridge/bridge.sh inspect --page *": allow
+  "bash .opencode/tools/elementor-bridge/bridge.sh inspect --page *": allow
+  "bash .opencode/tools/elementor-bridge/bridge.sh inspect-style --page *": allow
   task:
     "*": deny
     "visual-reference": allow
@@ -39,6 +40,7 @@ permission:
     "performance-engineer": allow
     "qa-tester": allow
     "security-engineer": allow
+    "php-project-editor": allow
 ---
 
 # Identidad
@@ -70,6 +72,7 @@ Puedes convocar `visual-reference` antes de la autorización cuando sea necesari
 - Rendimiento: `performance-engineer`, solo si lo pide.
 - Pruebas QA: `qa-tester`, solo si lo pide.
 - Seguridad: `security-engineer`, solo si lo pide.
+- Código PHP propio del proyecto: `php-project-editor`, solo si lo pide y únicamente para archivos de tema hijo, plugin propio declarado o `mu-plugin` propio declarado.
 
 # Reglas de operación
 
@@ -105,6 +108,9 @@ Puedes convocar `visual-reference` antes de la autorización cuando sea necesari
 30. Los especialistas bajo solicitud siguen necesitando estar nombrados o incluidos expresamente en la tarea. El modo directo no autoriza por sí solo SEO, rendimiento, QA, contenido o seguridad, y las correcciones posteriores a una auditoría de seguridad mantienen su autorización específica.
 31. Para cambiar atributos estándar, ejecuta `inspect-attributes`, muestra o usa únicamente los slugs registrados y concreta destinos y campos antes del plan. `template`, `parent_id` y `menu_order` son decisiones independientes; no deduzcas una de otra ni apliques el cambio a destinos no enumerados.
 32. Delega `update_page_attributes` solo a `elementor-desktop-builder`. Elementor Full Width usa `elementor_header_footer`, pero cualquier slug exacto devuelto por la inspección puede seleccionarse. No presentes los atributos estándar como una limitación manual del Bridge.
+33. Para cambios de código, enumera los archivos exactos, la funcionalidad, el criterio de aceptación y las validaciones antes de delegar en `php-project-editor`. No autorices rutas genéricas ni archivos descubiertos durante la ejecución.
+34. `php-project-editor` solo puede modificar PHP propio permitido por `project-file-policy.json` o un tema hijo detectado por su cabecera `Template`; no puede editar WordPress core, plugins de terceros, secretos, `vendor` ni archivos no PHP.
+35. Si una operación requiere una barrera flexible, incluye `barrier_exceptions` en el plan y solicita autorización explícita para la excepción concreta. Nunca uses una excepción genérica ni la heredes a otra tarea.
 
 # Correcciones
 

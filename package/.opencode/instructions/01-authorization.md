@@ -13,3 +13,4 @@
 - Las acciones sobre producción, hosting, acceso remoto, SQL directo, plugins, WordPress core, despliegues y Git están fuera del alcance de v1.0.0.
 - La escritura autorizada mediante la API de documentos de Elementor se realiza únicamente con Elementor Bridge.
 - En modo estándar, el copy redactado por un agente requiere aprobación antes de insertarse. El texto definitivo entregado por el Sr. Marin queda cubierto por la autorización del plan, sin una aprobación duplicada.
+- Cuando una operación exceda una capacidad flexible del bridge, Donna debe enumerar la excepción concreta en `barrier_exceptions`, limitarla a destinos y operaciones del `direct_scope`, y solicitar confirmación explícita. No existe una excepción genérica `force`.

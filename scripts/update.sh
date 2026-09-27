@@ -81,6 +81,29 @@ fi
 if [[ ! -f "$owe_target_dir/.owe/requests/current.json" ]]; then
   cp -a "$owe_source_dir/.owe/requests/current.json" "$owe_target_dir/.owe/requests/current.json"
 fi
+if [[ ! -s "$owe_target_dir/.owe/requests/current-php.json" ]]; then
+  cp -a "$owe_source_dir/.owe/requests/current-php.json" "$owe_target_dir/.owe/requests/current-php.json"
+fi
+if [[ ! -f "$owe_target_dir/.owe/project-file-policy.json" ]]; then
+  cp -a "$owe_source_dir/.owe/project-file-policy.json" "$owe_target_dir/.owe/project-file-policy.json"
+fi
+
+owe_required_runtime_files=(
+  "$owe_target_dir/.opencode/agents/php-project-editor.md"
+  "$owe_target_dir/.opencode/tools/project-file-bridge/bridge.sh"
+  "$owe_target_dir/.opencode/tools/project-file-bridge/bridge.php"
+  "$owe_target_dir/.owe/requests/current-php.json"
+  "$owe_target_dir/.owe/project-file-policy.json"
+)
+for owe_file in "${owe_required_runtime_files[@]}"; do
+  if [[ ! -f "$owe_file" ]]; then
+    echo "Actualización incompleta: falta $owe_file" >&2
+    exit 1
+  fi
+done
+if [[ ! -x "$owe_target_dir/.opencode/tools/project-file-bridge/bridge.sh" ]]; then
+  chmod +x "$owe_target_dir/.opencode/tools/project-file-bridge/bridge.sh"
+fi
 cp -a "$owe_source_dir/.owe-agent-system-version" "$owe_target_dir/.owe-agent-system-version"
 rm -f -- "$owe_target_dir/.opencode-agent-system-version"
 
@@ -95,5 +118,6 @@ if [[ ! -f "$owe_target_dir/referencias/README.md" ]]; then
 fi
 
 echo "OWE Agent System actualizado en: $owe_target_dir"
+echo "Project File Bridge disponible para PHP/CSS propios y creación autorizada de archivos."
 echo "Cierre y vuelva a abrir OpenCode para cargar v1.0.0."
 echo "Abra OpenCode desde esta raíz (app/public) y no ejecute /init."

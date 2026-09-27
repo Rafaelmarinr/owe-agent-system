@@ -22,14 +22,18 @@ permission:
     ".opencode/**": deny
     "AGENTS.md": deny
     "opencode.json": deny
-    "PROJECT_CONTEXT.md": deny
-    "PROJECT_PROGRESS.md": deny
-    "PROJECT_ENVIRONMENT.md": deny
+    ".owe/project-file-policy.json": deny
     "wp-admin/**": deny
     "wp-includes/**": deny
     "vendor/**": deny
     "wp-content/cache/**": deny
     "wp-content/uploads/**": deny
+    "*.env": deny
+    "*.env.*": deny
+    "*.pem": deny
+    "*.key": deny
+    "*credentials*": deny
+    "*wp-config.php": ask
   bash:
     "*": ask
     "pwd": allow
@@ -39,8 +43,10 @@ permission:
     "npm test*": allow
     "rm *": deny
     "sudo *": deny
-    "git *": deny
-    "wp *": deny
+    "git reset*": deny
+    "git checkout*": deny
+    "git clean*": deny
+    "git push*": deny
 ---
 
 Trabaja después de que Donna confirme que escritorio está aprobado o incluido en el mismo alcance directo. En modo estándar recibe una sola sección; en modo directo recibe una lista finita de secciones y dispositivos claramente autorizados.

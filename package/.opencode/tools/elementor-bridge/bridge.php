@@ -163,7 +163,7 @@ try {
     }
     $projectRoot = (string) realpath($projectRoot);
     if (!in_array($command, [
-        'check', 'inspect', 'inspect-content', 'export-section',
+        'check', 'inspect', 'inspect-content', 'inspect-style', 'export-section',
         'find-template', 'inspect-template', 'inspect-attributes', 'apply',
     ], true)) {
         owe_bridge_fail('COMMAND_NOT_SUPPORTED');
@@ -254,7 +254,7 @@ try {
         $requestPath = owe_bridge_safe_project_path($projectRoot, $requestOption, '.owe/requests', true);
         $request = owe_bridge_read_request($requestPath);
 
-        if (($request['schema'] ?? null) !== 'owe-elementor-bridge/1.0') {
+        if (!in_array(($request['schema'] ?? null), ['owe-elementor-bridge/1.0', 'owe-elementor-bridge/1.1'], true)) {
             owe_bridge_fail('REQUEST_SCHEMA_UNSUPPORTED');
         }
         $pageReference = isset($request['page']) ? (string) $request['page'] : '';
@@ -274,6 +274,7 @@ try {
             'replace_section',
             'patch_responsive',
             'update_widget_content',
+            'update_widget_style',
             'insert_template',
             'enable_elementor_editor',
             'update_page_attributes',
@@ -401,6 +402,7 @@ try {
         $newSectionId = '';
 
         $contentUpdates = [];
+        $styleUpdates = [];
         $templateId = 0;
         $templatePosition = '';
         $templateElements = [];
@@ -573,6 +575,31 @@ try {
             );
             $after = owe_bridge_apply_content_operation($before, $targetId, $contentUpdates);
             owe_bridge_verify_content_isolation($before, $after, $targetId, $contentUpdates);
+        } elseif ($operation === 'update_widget_style') {
+            $allowedRequestFields = [
+                'schema', 'page', 'device', 'operation', 'expected_page_hash',
+                'requires_pro', 'target_section_id', 'authorization', 'updates',
+            ];
+            if (array_diff(array_keys($request), $allowedRequestFields) !== []) {
+                owe_bridge_fail('STYLE_REQUEST_FIELD_NOT_ALLOWED');
+            }
+            if ($device !== 'desktop') {
+                owe_bridge_fail('DESKTOP_OPERATION_REQUIRED');
+            }
+            owe_bridge_require_authorization($request, ['elementor.custom_css']);
+            if ($targetId === '') {
+                owe_bridge_fail('TARGET_SECTION_REQUIRED');
+            }
+            $section = owe_bridge_find_top_level_section($before, $targetId);
+            if ($section === null) {
+                owe_bridge_fail('TARGET_SECTION_NOT_FOUND');
+            }
+            $styleIndex = owe_bridge_section_style_index($section);
+            $updates = isset($request['updates']) && is_array($request['updates']) ? $request['updates'] : [];
+            $styleUpdates = owe_bridge_prepare_style_updates($updates, $styleIndex);
+            owe_bridge_require_authorized_scope($request, 'update_widget_style', array_keys($styleUpdates));
+            $after = owe_bridge_apply_style_operation($before, $targetId, $styleUpdates);
+            owe_bridge_verify_style_isolation($before, $after, $targetId, $styleUpdates);
         } elseif ($operation === 'patch_responsive') {
             $patches = isset($request['patches']) && is_array($request['patches']) ? $request['patches'] : [];
             if ($targetId === '') {
@@ -619,6 +646,17 @@ try {
                 owe_bridge_fail('ELEMENTOR_SAVE_NORMALIZATION_REQUIRED');
             }
             owe_bridge_verify_content_isolation($before, $normalizedAfter, $targetId, $contentUpdates);
+        }
+        if ($operation === 'update_widget_style') {
+            $normalizedBefore = owe_bridge_normalize_document_elements($document, $before);
+            if (!hash_equals($beforeHash, owe_bridge_elements_hash($normalizedBefore))) {
+                owe_bridge_fail('ELEMENTOR_DOCUMENT_NOT_CANONICAL');
+            }
+            $normalizedAfter = owe_bridge_normalize_document_elements($document, $after);
+            if (!hash_equals($afterHash, owe_bridge_elements_hash($normalizedAfter))) {
+                owe_bridge_fail('ELEMENTOR_SAVE_NORMALIZATION_REQUIRED');
+            }
+            owe_bridge_verify_style_isolation($before, $normalizedAfter, $targetId, $styleUpdates);
         }
         if ($operation === 'insert_template') {
             $normalizedBefore = owe_bridge_normalize_document_elements($document, $before);
@@ -695,6 +733,9 @@ try {
             if ($operation === 'update_widget_content') {
                 owe_bridge_verify_content_isolation($before, $persisted, $targetId, $contentUpdates);
             }
+            if ($operation === 'update_widget_style') {
+                owe_bridge_verify_style_isolation($before, $persisted, $targetId, $styleUpdates);
+            }
             if ($operation === 'update_page_attributes') {
                 $persistedPost = get_post((int) $post->ID);
                 if (!$persistedPost instanceof WP_Post
@@ -759,7 +800,7 @@ try {
 
         $resultSectionId = $operation === 'insert_template'
             ? implode(',', $templateRootIds)
-            : (in_array($operation, ['patch_responsive', 'update_widget_content'], true)
+            : (in_array($operation, ['patch_responsive', 'update_widget_content', 'update_widget_style'], true)
                 ? $targetId
                 : $newSectionId);
         echo 'APPLIED page_id=' . (int) $post->ID
@@ -834,11 +875,15 @@ try {
         exit(0);
     }
 
-    $defaultOutput = $command === 'inspect'
-        ? '.owe/runtime/elementor-structure.json'
-        : ($command === 'inspect-content'
-            ? '.owe/runtime/elementor-content.json'
-            : '.owe/runtime/elementor-section.json');
+    if ($command === 'inspect') {
+        $defaultOutput = '.owe/runtime/elementor-structure.json';
+    } elseif ($command === 'inspect-content') {
+        $defaultOutput = '.owe/runtime/elementor-content.json';
+    } elseif ($command === 'inspect-style') {
+        $defaultOutput = '.owe/runtime/elementor-style.json';
+    } else {
+        $defaultOutput = '.owe/runtime/elementor-section.json';
+    }
     $outputOption = isset($options['output']) ? (string) $options['output'] : $defaultOutput;
     if (substr(strtolower($outputOption), -5) !== '.json') {
         owe_bridge_fail('OUTPUT_JSON_REQUIRED');
@@ -875,6 +920,33 @@ try {
         echo 'CONTENT_INSPECTED page_id=' . (int) $post->ID
             . ' section_id=' . $sectionId
             . ' fields=' . count($fields)
+            . ' output=' . $outputOption . "\n";
+        exit(0);
+    }
+
+    if ($command === 'inspect-style') {
+        $fields = owe_bridge_section_style_index($section);
+        $publicFields = [];
+        foreach ($fields as $field) {
+            $publicFields[] = [
+                'element_id' => $field['element_id'],
+                'widget' => $field['widget'],
+                'setting' => $field['setting'],
+                'value' => $field['value'],
+                'hash' => $field['hash'],
+            ];
+        }
+        owe_bridge_write_json($outputPath, [
+            'schema' => 'owe-elementor-style-inspection/1.0',
+            'page_id' => (int) $post->ID,
+            'page_title' => (string) get_the_title($post),
+            'page_hash' => $pageHash,
+            'section_id' => $sectionId,
+            'fields' => $publicFields,
+        ]);
+        echo 'STYLE_INSPECTED page_id=' . (int) $post->ID
+            . ' section_id=' . $sectionId
+            . ' fields=' . count($publicFields)
             . ' output=' . $outputOption . "\n";
         exit(0);
     }

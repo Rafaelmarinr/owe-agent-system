@@ -28,3 +28,7 @@ Para insertar una plantilla, Donna debe incluir: destino, ID, título, slug, tip
 Para modificar atributos estándar, Donna debe incluir los destinos exactos, el resultado vigente de `inspect-attributes`, cada campo solicitado y su valor aprobado. No trasladar atributos a otros destinos por similitud. En modo directo, `direct_scope` enumera todos los destinos cubiertos y el builder conserva una operación y verificación independientes por cada uno.
 
 Si `check` devuelve `NEEDS_ELEMENTOR_ACTIVATION`, Donna debe incluir el `source_hash`, el estado `activation_supported` y la decisión explícita del Sr. Marin. Sin aceptación, el subagente se detiene. Con aceptación y soporte confirmado, habilita Editar con Elementor antes de continuar con la operación ya autorizada. Nunca convierte contenido nativo ni activa un destino que no esté vacío.
+
+Para cambios de código, Donna debe incluir la solicitud exacta, la funcionalidad esperada, los archivos relativos enumerados, la ubicación de código propio, el comportamiento que no debe cambiar, el criterio de aceptación, las validaciones y la autorización. `php-project-editor` no puede ampliar la lista de archivos ni escribir mediante Bash genérico.
+
+Cuando el plan incluya una excepción, la delegación debe transmitir `barrier_exceptions`, `direct_scope.operations` y los destinos exactos cubiertos. `elementor.custom_css` solo autoriza `update_widget_style`; `project.php_file` y `project.css_file` solo autorizan archivos existentes enumerados; `project.create_file` es obligatorio para cada archivo nuevo.

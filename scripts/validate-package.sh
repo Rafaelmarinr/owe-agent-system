@@ -28,6 +28,13 @@ owe_required=(
   "$owe_package/.opencode/tools/wordpress-content-bridge/checks.php"
   "$owe_package/.opencode/tools/wordpress-content-bridge/validator.php"
   "$owe_package/.opencode/tools/wordpress-content-bridge/REQUEST_SCHEMA.md"
+  "$owe_package/.opencode/tools/project-file-bridge/bridge.sh"
+  "$owe_package/.opencode/tools/project-file-bridge/bridge.php"
+  "$owe_package/.opencode/tools/project-file-bridge/checks.php"
+  "$owe_package/.opencode/tools/project-file-bridge/REQUEST_SCHEMA.md"
+  "$owe_package/.opencode/agents/php-project-editor.md"
+  "$owe_package/.owe/project-file-policy.json"
+  "$owe_package/.owe/requests/current-php.json"
   "$owe_package/.owe/requests/README.md"
   "$owe_package/.owe/requests/current.json"
   "$owe_package/.owe/requests/current-content.json"
@@ -35,9 +42,11 @@ owe_required=(
   "$owe_root/tests/fixtures/elementor-enable-request.json"
   "$owe_root/tests/fixtures/elementor-page-attributes-request.json"
   "$owe_root/tests/fixtures/elementor-widget-content.json"
+  "$owe_root/tests/fixtures/elementor-widget-style-request.json"
   "$owe_root/tests/fixtures/elementor-template-request.json"
   "$owe_root/tests/fixtures/fake-wordpress/wp-load.php"
   "$owe_root/tests/test-elementor-widget-content.php"
+  "$owe_root/tests/test-project-file-bridge.php"
 )
 
 for owe_file in "${owe_required[@]}"; do
@@ -63,6 +72,15 @@ if config.get("subagent_depth") != 1:
 instructions = config.get("instructions", [])
 if any("PROJECT_CONTEXT.md" in instruction for instruction in instructions):
     raise SystemExit("PROJECT_CONTEXT.md no debe cargarse automáticamente")
+permissions = config.get("permission", {})
+edit_permissions = permissions.get("edit", {})
+bash_permissions = permissions.get("bash", {})
+for required in (".opencode/**", ".owe/project-file-policy.json", "*.env", "*.pem"):
+    if edit_permissions.get(required) != "deny":
+        raise SystemExit(f"Protección de edición ausente: {required}")
+for required in ("rm *", "sudo *", "git reset*", "git clean*"):
+    if bash_permissions.get(required) != "deny":
+        raise SystemExit(f"Protección Bash ausente: {required}")
 PY
 
 python3 - "$owe_package/AGENTS.md" "$owe_package/.opencode/instructions/01-authorization.md" "$owe_package/.opencode/instructions/02-visual-workflow.md" "$owe_package/.opencode/instructions/04-delegation.md" "$owe_package/.opencode/agents/donna.md" "$owe_package/.opencode/agents/elementor-desktop-builder.md" "$owe_package/.opencode/agents/elementor-responsive-builder.md" "$owe_package/.opencode/agents/wordpress-content.md" "$owe_root/README.md" "$owe_root/CHANGELOG.md" <<'PY'
@@ -342,6 +360,35 @@ if "No completar ni exigir audiencia, tono, CTA" not in delegation:
     raise SystemExit("El contrato de delegación todavía permite un brief predeterminado")
 PY
 
+python3 - "$owe_root/tests/fixtures/elementor-widget-style-request.json" "$owe_package/.opencode/tools/elementor-bridge/bridge.php" "$owe_package/.opencode/tools/elementor-bridge/checks.php" "$owe_package/.opencode/tools/elementor-bridge/reader.php" "$owe_package/.opencode/tools/elementor-bridge/validator.php" "$owe_package/.opencode/tools/elementor-bridge/writer.php" "$owe_package/.opencode/agents/elementor-desktop-builder.md" <<'PY'
+import json
+import pathlib
+import sys
+
+fixture_path, *paths = map(pathlib.Path, sys.argv[1:])
+with fixture_path.open(encoding="utf-8") as handle:
+    request = json.load(handle)
+if request.get("operation") != "update_widget_style" or request.get("schema") != "owe-elementor-bridge/1.1":
+    raise SystemExit("Fixture custom_css: operación inválida")
+if "elementor.custom_css" not in request.get("authorization", {}).get("barrier_exceptions", []):
+    raise SystemExit("Fixture custom_css: autorización inválida")
+combined = "\n".join(path.read_text(encoding="utf-8") for path in paths)
+for required in (
+    "inspect-style",
+    "update_widget_style",
+    "owe_bridge_section_style_index",
+    "owe_bridge_prepare_style_updates",
+    "owe_bridge_verify_style_isolation",
+    "elementor.custom_css",
+    "UNSAFE_CUSTOM_CSS",
+):
+    if required not in combined:
+        raise SystemExit(f"Custom CSS incompleto: {required}")
+builder = paths[-1].read_text(encoding="utf-8")
+if "authorization.barrier_exceptions" not in builder:
+    raise SystemExit("Builder no aplica autorización de custom_css")
+PY
+
 python3 - "$owe_root/tests/fixtures/content-batch.json" "$owe_package/.opencode/tools/wordpress-content-bridge/bridge.php" "$owe_package/.opencode/agents/wordpress-content.md" <<'PY'
 import json
 import pathlib
@@ -417,6 +464,44 @@ if request.get("operation") != "replace_before_use":
     raise SystemExit("La plantilla Elementor debe permanecer inerte")
 PY
 
+python3 - "$owe_root/tests/fixtures/elementor-widget-style-request.json" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as handle:
+    request = json.load(handle)
+
+if request.get("schema") != "owe-elementor-bridge/1.1":
+    raise SystemExit("Fixture custom_css: schema inválido")
+if request.get("operation") != "update_widget_style":
+    raise SystemExit("Fixture custom_css: operación inválida")
+authorization = request.get("authorization", {})
+if authorization.get("user_confirmed") is not True:
+    raise SystemExit("Fixture custom_css: falta confirmación")
+if "elementor.custom_css" not in authorization.get("barrier_exceptions", []):
+    raise SystemExit("Fixture custom_css: falta excepción")
+update = request.get("updates", [{}])[0]
+if update.get("setting") != "custom_css" or len(update.get("expected_hash", "")) != 64:
+    raise SystemExit("Fixture custom_css: actualización inválida")
+PY
+
+python3 - "$owe_package/.owe/requests/current-php.json" "$owe_package/.owe/project-file-policy.json" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as handle:
+    request = json.load(handle)
+with open(sys.argv[2], encoding="utf-8") as handle:
+    policy = json.load(handle)
+
+if request.get("schema") != "owe-project-file-bridge/1.0":
+    raise SystemExit("Plantilla current-php.json inválida")
+if request.get("operation") != "replace" or request.get("user_confirmed") is not False or request.get("files") != []:
+    raise SystemExit("La plantilla PHP debe permanecer inerte")
+if policy.get("allowed_plugin_roots") != []:
+    raise SystemExit("La política de plugins debe instalarse vacía")
+PY
+
 owe_agent_count=0
 while IFS= read -r -d '' owe_agent; do
   owe_agent_count=$((owe_agent_count + 1))
@@ -427,7 +512,7 @@ while IFS= read -r -d '' owe_agent; do
   [[ "$owe_model" == openai/gpt-* ]] || { echo "Proveedor no permitido: $owe_agent" >&2; exit 1; }
 done < <(find "$owe_package/.opencode/agents" -type f -name '*.md' -print0)
 
-if [[ "$owe_agent_count" -ne 9 ]]; then
+if [[ "$owe_agent_count" -ne 10 ]]; then
   echo "Cantidad inesperada de agentes: $owe_agent_count" >&2
   exit 1
 fi
@@ -437,6 +522,33 @@ if grep -R -n -i -E 'backup-status|safety-backup' "$owe_package"; then
   exit 1
 fi
 
+if ! grep -q '"*/.owe/requests/current-php.json": allow' "$owe_package/.opencode/agents/php-project-editor.md"; then
+  echo "php-project-editor no admite la ruta relativa variable del request." >&2
+  exit 1
+fi
+if ! grep -q 'inspect --path \*' "$owe_package/.opencode/agents/php-project-editor.md"; then
+  echo "php-project-editor no tiene inspección directa por ruta." >&2
+  exit 1
+fi
+if ! grep -q 'bash \.opencode/tools/project-file-bridge/bridge\.sh \.\.\.' "$owe_package/.opencode/agents/php-project-editor.md"; then
+  echo "php-project-editor no exige la invocación local del bridge." >&2
+  exit 1
+fi
+if ! grep -q 'No busques `project-file-bridge` como comando global' "$owe_package/.opencode/agents/php-project-editor.md"; then
+  echo "php-project-editor no bloquea la búsqueda global del bridge." >&2
+  exit 1
+fi
+if grep -q '"project-file-bridge": allow' "$owe_package/.opencode/agents/php-project-editor.md"; then
+  echo "php-project-editor contiene una autorización de comando global." >&2
+  exit 1
+fi
+for owe_required_text in 'project.create_file' 'owe_file_validate_css' 'FILE_ALREADY_EXISTS' 'operation.*create'; do
+  if ! grep -Eq "$owe_required_text" "$owe_package/.opencode/tools/project-file-bridge/bridge.php" "$owe_package/.opencode/tools/project-file-bridge/checks.php" "$owe_package/.opencode/tools/project-file-bridge/REQUEST_SCHEMA.md"; then
+    echo "Project File Bridge incompleto: $owe_required_text" >&2
+    exit 1
+  fi
+done
+
 bash -n "$owe_root/scripts/install.sh"
 bash -n "$owe_root/scripts/update.sh"
 bash -n "$owe_package/.opencode/scripts/update-project-environment.sh"
@@ -444,6 +556,7 @@ bash -n "$owe_package/.opencode/tools/runtime/resolve-php.sh"
 bash -n "$owe_package/.opencode/tools/runtime/run-php.sh"
 bash -n "$owe_package/.opencode/tools/elementor-bridge/bridge.sh"
 bash -n "$owe_package/.opencode/tools/wordpress-content-bridge/bridge.sh"
+bash -n "$owe_package/.opencode/tools/project-file-bridge/bridge.sh"
 if command -v php >/dev/null 2>&1; then
   php -l "$owe_package/.opencode/scripts/inspect-wordpress.php" >/dev/null
   php -l "$owe_package/.opencode/tools/elementor-bridge/bridge.php" >/dev/null
@@ -455,8 +568,12 @@ if command -v php >/dev/null 2>&1; then
   php -l "$owe_package/.opencode/tools/wordpress-content-bridge/bridge.php" >/dev/null
   php -l "$owe_package/.opencode/tools/wordpress-content-bridge/checks.php" >/dev/null
   php -l "$owe_package/.opencode/tools/wordpress-content-bridge/validator.php" >/dev/null
+  php -l "$owe_package/.opencode/tools/project-file-bridge/bridge.php" >/dev/null
+  php -l "$owe_package/.opencode/tools/project-file-bridge/checks.php" >/dev/null
   php -l "$owe_root/tests/test-elementor-widget-content.php" >/dev/null
+  php -l "$owe_root/tests/test-project-file-bridge.php" >/dev/null
   php "$owe_root/tests/test-elementor-widget-content.php"
+  php "$owe_root/tests/test-project-file-bridge.php"
 
   owe_term_test_root="$(mktemp -d)"
   trap 'rm -rf -- "$owe_term_test_root"' EXIT
@@ -506,4 +623,4 @@ else
   echo "Aviso: PHP CLI no está disponible; se omite php -l."
 fi
 
-echo "Validación correcta: OWE Agent System v1.0.0, 9 agentes, activación, atributos, copy y plantillas Elementor, WordPress Content Bridge y proveedor openai."
+echo "Validación correcta: OWE Agent System v1.0.0, 10 agentes, bridges Elementor, contenido WordPress y archivos PHP/CSS propios, y proveedor openai."

@@ -5,16 +5,18 @@ Sistema multiagente reutilizable para proyectos WordPress y Elementor ejecutados
 ## Alcance de esta versión
 
 - Donna como agente principal y orquestadora.
-- Nueve agentes en total: Donna y ocho especialistas.
+- Diez agentes en total: Donna y nueve especialistas.
 - Flujo de escritorio primero y responsive después.
 - Construcción y corrección sección por sección con aprobación del Sr. Marin.
 - Comando `/wp-environment` para crear o actualizar `PROJECT_ENVIRONMENT.md`.
 - Elementor Bridge local para aplicar secciones, actualizar copy autorizado e insertar plantillas guardadas de sección, contenedor o página mediante las APIs de Elementor.
 - WordPress Content Bridge local para buscar categorías y términos por nombre o `slug`, crear y actualizar contenido nativo y ejecutar lotes reutilizables mediante las APIs de WordPress.
+- Project File Bridge local para modificar PHP y CSS propios de temas hijo, plugins declarados y `mu-plugins` declarados, y crear archivos nuevos con autorización explícita, validación, escritura atómica y rollback.
+- Autorizaciones directas por tarea con excepciones de barrera limitadas a operaciones y destinos concretos, incluyendo CSS personalizado validado de Elementor.
 - Modelos GPT mediante la conexión `openai/*` de la suscripción de ChatGPT.
 - Instalación y actualización seguras en la raíz de un WordPress local.
 
-Esta versión no incluye integración WP-CLI, acceso FTP/SFTP/SSH, despliegues, SQL directo ni automatización de navegador incorporada. WordPress Content Bridge no elimina contenido. El copy Elementor se actualiza exclusivamente mediante el catálogo editorial y las validaciones de Elementor Bridge; addons, Dynamic Tags, shortcodes y controles funcionales quedan fuera.
+Esta versión no incluye integración WP-CLI, acceso FTP/SFTP/SSH, despliegues, SQL directo ni automatización de navegador incorporada. WordPress Content Bridge no elimina contenido. El Project File Bridge modifica PHP y CSS propios permitidos, pero la creación de cualquier archivo requiere autorización específica; no modifica core, plugins de terceros, secretos, `vendor`, JavaScript, JSON ni configuración. El copy Elementor se actualiza exclusivamente mediante el catálogo editorial y las validaciones de Elementor Bridge; addons, Dynamic Tags, shortcodes y controles funcionales quedan fuera.
 
 ## Requisitos
 

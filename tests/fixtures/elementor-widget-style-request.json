@@ -1,0 +1,25 @@
+{
+  "schema": "owe-elementor-bridge/1.1",
+  "page": "123",
+  "device": "desktop",
+  "operation": "update_widget_style",
+  "expected_page_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "requires_pro": true,
+  "target_section_id": "abc123",
+  "authorization": {
+    "user_confirmed": true,
+    "barrier_exceptions": ["elementor.custom_css"],
+    "direct_scope": {
+      "operations": ["update_widget_style"],
+      "widgets": ["def456"]
+    }
+  },
+  "updates": [
+    {
+      "element_id": "def456",
+      "setting": "custom_css",
+      "expected_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "value": "selector .e-shop-table { display: block; }"
+    }
+  ]
+}

@@ -39,9 +39,11 @@ Esta versión incorpora una herramienta PHP local y determinista para leer y gua
 
 Cada operación requiere el hash vigente de la página y valida que el contenido fuera de alcance no cambie. Para responsive solo admite propiedades específicas del dispositivo. `update_widget_content` cambia exclusivamente campos textuales inspeccionados de widgets oficiales Elementor y Elementor Pro. `insert_template` admite secciones, contenedores y páginas de la biblioteca local, con posición y ajustes de página decididos explícitamente. Si una comprobación falla, devuelve un código `BLOCKED` y no se debe intentar otro método de escritura.
 
+`update_widget_style` permite únicamente `custom_css` cuando el plan autorizado incluye la excepción `elementor.custom_css`. Exige inspección, hash de página y de campo, alcance de widget, validación de CSS, aislamiento y comprobación posterior. No habilita settings arbitrarios, JavaScript, PHP ni HTML ejecutable.
+
 `inspect-attributes` y `update_page_attributes` permiten leer y modificar únicamente plantilla registrada, padre y orden del destino. La operación exige hashes vigentes, no toca elementos Elementor ni metadatos arbitrarios y solo la ejecuta `elementor-desktop-builder` para los destinos expresamente autorizados.
 
-Donna puede usar antes de la autorización únicamente `find-template`, `inspect-template` e `inspect`, que son comandos de lectura. Un identificador de plantilla se busca por slug exacto; la búsqueda por nombre debe solicitarse expresamente y, con dos o más coincidencias, exige elección humana. Solo `elementor-desktop-builder` puede ejecutar `insert_template` después de la autorización.
+Donna puede usar antes de la autorización únicamente `find-template`, `inspect-template`, `inspect` e `inspect-style`, que son comandos de lectura. Un identificador de plantilla se busca por slug exacto; la búsqueda por nombre debe solicitarse expresamente y, con dos o más coincidencias, exige elección humana. Solo `elementor-desktop-builder` puede ejecutar `insert_template` o `update_widget_style` después de la autorización correspondiente.
 
 El comando `check` también es de solo lectura. Si devuelve `NEEDS_ELEMENTOR_ACTIVATION`, Donna debe avisar y preguntar si el Sr. Marin desea habilitar Editar con Elementor. Solo se ofrece la activación automática para destinos vacíos que Elementor declare compatibles, incluidos tipos personalizados habilitados, cuando `activation_supported=yes`. `enable_elementor_editor` únicamente marca el documento mediante la API oficial de Elementor y solo puede ejecutarla `elementor-desktop-builder` después de una aceptación explícita incluida en el plan.
 
@@ -50,6 +52,12 @@ El comando `check` también es de solo lectura. Si devuelve `NEEDS_ELEMENTOR_ACT
 Esta versión incorpora una herramienta PHP local y determinista para inspeccionar, crear y actualizar contenido nativo mediante las APIs de WordPress. No es un agente, no consume tokens por sí misma y nunca usa SQL directo. Solo `wordpress-content` puede invocarla después de una solicitud explícita y de la autorización correspondiente.
 
 Admite entradas, páginas y tipos públicos compatibles con el editor; búsqueda exacta de categorías y términos por nombre o `slug`; creación o edición de categorías y términos; y asignación de términos existentes. Las búsquedas son de solo lectura, se limitan a una taxonomía y devuelven todas las coincidencias sin elegir arbitrariamente. `apply_batch` agrupa hasta 250 creaciones y asignaciones relacionadas en una ejecución, valida el lote completo antes de escribir y revierte únicamente los elementos creados por ese lote si una acción falla. No elimina contenido preexistente, no cambia opciones, usuarios, plugins, medios ni metadatos arbitrarios. Las actualizaciones requieren el hash vigente del contenido. Si una entrada está construida con Elementor, el puente no modifica su cuerpo y devuelve el enrutamiento a Elementor Bridge.
+
+## Project File Bridge
+
+Esta versión incorpora `project-file-bridge` para modificar PHP y CSS propios del proyecto, y crear archivos nuevos con autorización explícita, hash cuando el archivo ya existe, allowlist de rutas, validación, escritura atómica, verificación posterior y rollback. Los temas hijo se reconocen por la cabecera `Template` de `style.css`; los plugins propios y `mu-plugins` deben declararse en `.owe/project-file-policy.json`. Solo `php-project-editor` puede invocarlo. No modifica WordPress core, plugins de terceros, `vendor`, secretos, configuración, JavaScript, JSON, base de datos ni archivos fuera de la raíz.
+
+Las excepciones de barrera son temporales y específicas de la tarea. `project.php_file` o `project.css_file` deben estar incluidos para modificar archivos existentes; `project.create_file` es obligatorio siempre que se cree un archivo nuevo.
 
 ## Flujo visual
 

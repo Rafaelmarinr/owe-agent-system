@@ -182,6 +182,72 @@ function owe_bridge_apply_content_operation(array $before, string $sectionId, ar
 }
 
 /**
+ * @param array<string, string> $values
+ * @param array<string, bool> $found
+ */
+function owe_bridge_replace_widget_style(array $element, array $values, array &$found): array
+{
+    $elementId = isset($element['id']) && is_string($element['id']) ? $element['id'] : '';
+    if (($element['elType'] ?? '') === 'widget' && isset($values[$elementId])) {
+        $settings = isset($element['settings']) && is_array($element['settings']) ? $element['settings'] : [];
+        $settings['custom_css'] = $values[$elementId];
+        $element['settings'] = $settings;
+        $found[$elementId] = true;
+    }
+    foreach (($element['elements'] ?? []) as $index => $child) {
+        if (is_array($child)) {
+            $element['elements'][$index] = owe_bridge_replace_widget_style($child, $values, $found);
+        }
+    }
+    return $element;
+}
+
+/**
+ * @param array<int, mixed> $before
+ * @param array<string, array<string, string>> $updates
+ * @return array<int, mixed>
+ */
+function owe_bridge_apply_style_operation(array $before, string $sectionId, array $updates): array
+{
+    $targetIndex = owe_bridge_find_top_level_index($before, $sectionId);
+    if ($targetIndex < 0 || !is_array($before[$targetIndex])) {
+        owe_bridge_fail('TARGET_SECTION_NOT_FOUND');
+    }
+    $values = [];
+    foreach ($updates as $elementId => $update) {
+        $values[$elementId] = $update['new'];
+    }
+    $found = [];
+    $before[$targetIndex] = owe_bridge_replace_widget_style($before[$targetIndex], $values, $found);
+    foreach ($values as $elementId => $_) {
+        if (!isset($found[$elementId])) {
+            owe_bridge_fail('STYLE_WIDGET_NOT_FOUND');
+        }
+    }
+    return $before;
+}
+
+/**
+ * @param array<int, mixed> $before
+ * @param array<int, mixed> $after
+ * @param array<string, array<string, string>> $updates
+ */
+function owe_bridge_verify_style_isolation(array $before, array $after, string $sectionId, array $updates): void
+{
+    $oldValues = [];
+    foreach ($updates as $elementId => $update) {
+        $oldValues[$elementId] = $update['old'];
+    }
+    $masked = owe_bridge_apply_style_operation($after, $sectionId, array_map(
+        static fn (string $value): array => ['new' => $value],
+        $oldValues
+    ));
+    if (!hash_equals(owe_bridge_elements_hash($before), owe_bridge_elements_hash($masked))) {
+        owe_bridge_fail('STYLE_DIFF_OUT_OF_SCOPE');
+    }
+}
+
+/**
  * @param array<int, mixed> $before
  * @param array<int, mixed> $after
  * @param array<string, array<string, string>> $updates
@@ -210,7 +276,7 @@ function owe_bridge_verify_section_isolation(
     string $newSectionId
 ): void {
     foreach ($beforeHashes as $sectionId => $hash) {
-        $mayChange = in_array($operation, ['replace_section', 'patch_responsive', 'update_widget_content'], true)
+        $mayChange = in_array($operation, ['replace_section', 'patch_responsive', 'update_widget_content', 'update_widget_style'], true)
             && $sectionId === $targetId;
         if ($mayChange) {
             continue;
@@ -225,7 +291,7 @@ function owe_bridge_verify_section_isolation(
     ) {
         owe_bridge_fail('NEW_SECTION_NOT_FOUND_AFTER_WRITE');
     }
-    if (in_array($operation, ['replace_section', 'patch_responsive', 'update_widget_content'], true)
+    if (in_array($operation, ['replace_section', 'patch_responsive', 'update_widget_content', 'update_widget_style'], true)
         && !isset($afterHashes[$targetId])
     ) {
         owe_bridge_fail('TARGET_SECTION_NOT_FOUND_AFTER_WRITE');

@@ -36,3 +36,7 @@
 - Donna ofrece después de cada plan un modo estándar por etapas o un modo directo para todo el plan o partes específicas; la autorización directa expira con la tarea y no elimina validaciones técnicas.
 - Los builders y `wordpress-content` pueden procesar listas cerradas en modo directo sin revisiones intermedias, con hash y operación aislada por destino e informe final conjunto.
 - Elementor Bridge incorpora `inspect-attributes` y `update_page_attributes` para cambiar plantilla registrada, padre y orden sin reinsertar contenido ni modificar el árbol Elementor.
+- Project File Bridge y `php-project-editor` permiten modificar PHP propio de temas hijo, plugins declarados y `mu-plugins` declarados con allowlist, hashes, lint, escritura atómica, validación posterior y rollback; quedan fuera core, terceros, secretos y archivos no PHP.
+- Se simplifica la política de permisos: edición y Bash normales requieren confirmación, se conservan únicamente bloqueos de secretos, configuración administrada y comandos destructivos, y Project File Bridge incorpora inspección directa por ruta.
+- Se añade autorización temporal por tarea, `update_widget_style` para `custom_css` validado de Elementor y alcance explícito para excepciones `elementor.custom_css` y `project.php_file`.
+- Project File Bridge admite PHP y CSS propios, incluyendo creación de archivos nuevos, siempre con `project.create_file`, ruta exacta y autorización explícita.

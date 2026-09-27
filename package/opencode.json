@@ -34,6 +34,32 @@
     "grep": "allow",
     "list": "allow",
     "question": "allow",
+    "edit": {
+      "*": "ask",
+      ".opencode/**": "deny",
+      "AGENTS.md": "deny",
+      "opencode.json": "deny",
+      ".owe/project-file-policy.json": "deny",
+      "wp-admin/**": "deny",
+      "wp-includes/**": "deny",
+      "vendor/**": "deny",
+      "wp-content/cache/**": "deny",
+      "wp-content/uploads/**": "deny",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.pem": "deny",
+      "*.key": "deny",
+      "*credentials*": "deny"
+    },
+    "bash": {
+      "*": "ask",
+      "rm *": "deny",
+      "sudo *": "deny",
+      "git reset*": "deny",
+      "git checkout*": "deny",
+      "git clean*": "deny",
+      "git push*": "deny"
+    },
     "external_directory": "deny",
     "doom_loop": "ask"
   },

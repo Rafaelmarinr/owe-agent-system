@@ -454,6 +454,47 @@ function owe_bridge_section_content_index(array $section): array
 }
 
 /**
+ * @return array<string, array<string, mixed>>
+ */
+function owe_bridge_section_style_index(array $section): array
+{
+    $index = [];
+    $elementId = isset($section['id']) && is_string($section['id']) ? $section['id'] : '';
+    if (($section['elType'] ?? '') === 'widget') {
+        $widgetType = isset($section['widgetType']) && is_string($section['widgetType']) ? $section['widgetType'] : '';
+        $controls = owe_bridge_widget_controls($widgetType);
+        $settings = isset($section['settings']) && is_array($section['settings']) ? $section['settings'] : [];
+        if (isset($controls['custom_css'])
+            && isset($controls['custom_css']['type'])
+            && is_string($controls['custom_css']['type'])
+        ) {
+            $customCss = isset($settings['custom_css']) && is_string($settings['custom_css'])
+                ? $settings['custom_css']
+                : '';
+            $index[$elementId] = [
+                'element_id' => $elementId,
+                'widget' => $widgetType,
+                'setting' => 'custom_css',
+                'value' => $customCss,
+                'hash' => owe_bridge_content_hash($elementId . ':custom_css', $customCss),
+            ];
+        }
+    }
+    foreach (($section['elements'] ?? []) as $child) {
+        if (!is_array($child)) {
+            continue;
+        }
+        foreach (owe_bridge_section_style_index($child) as $elementId => $entry) {
+            if (isset($index[$elementId])) {
+                owe_bridge_fail('DUPLICATE_STYLE_FIELD');
+            }
+            $index[$elementId] = $entry;
+        }
+    }
+    return $index;
+}
+
+/**
  * @return array<int, array<string, mixed>>
  */
 function owe_bridge_public_content_fields(array $section): array

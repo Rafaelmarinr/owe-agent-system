@@ -20,8 +20,10 @@ permission:
     "npm test*": allow
     "rm *": deny
     "sudo *": deny
-    "git *": deny
-    "wp *": deny
+    "git reset*": deny
+    "git checkout*": deny
+    "git clean*": deny
+    "git push*": deny
   task: deny
   question: deny
   external_directory: deny

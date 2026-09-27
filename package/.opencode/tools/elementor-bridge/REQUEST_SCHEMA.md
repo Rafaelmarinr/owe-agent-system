@@ -2,7 +2,7 @@
 
 Read this file only when an authorized Elementor mutation is about to be applied.
 
-Requests live in `.owe/requests/`. Reuse `.owe/requests/current.json` instead of accumulating one file per attempt. Use this base:
+Requests live in `.owe/requests/`. Reuse `.owe/requests/current.json` instead of accumulating one file per attempt. Normal requests use `owe-elementor-bridge/1.0`; task-scoped barrier exceptions may use `owe-elementor-bridge/1.1`.
 
 ```json
 {
@@ -190,6 +190,50 @@ Responsive requests never replace the section tree:
 ```
 
 For tablet every settings key must end in `_tablet`; for mobile it must end in `_mobile`. Base desktop keys are rejected.
+
+## Update authorized custom CSS
+
+Inspect only the authorized section first:
+
+```bash
+bash .opencode/tools/elementor-bridge/bridge.sh inspect-style --page "LOCAL_URL_OR_ID" --section-id "ROOT_SECTION_ID" --requires-pro
+```
+
+The inspection exposes only the current `custom_css` value of widgets that
+actually provide that Elementor control, together with its hash. After the
+user explicitly authorizes the `elementor.custom_css` exception, use:
+
+```json
+{
+  "schema": "owe-elementor-bridge/1.1",
+  "page": "PAGE_ID_OR_LOCAL_URL",
+  "device": "desktop",
+  "operation": "update_widget_style",
+  "expected_page_hash": "HASH_FROM_INSPECTION",
+  "requires_pro": true,
+  "target_section_id": "ROOT_SECTION_ID",
+  "authorization": {
+    "user_confirmed": true,
+    "barrier_exceptions": ["elementor.custom_css"],
+    "direct_scope": {
+      "operations": ["update_widget_style"],
+      "widgets": ["WIDGET_ID"]
+    }
+  },
+  "updates": [
+    {
+      "element_id": "WIDGET_ID",
+      "setting": "custom_css",
+      "expected_hash": "HASH_FROM_STYLE_INSPECTION",
+      "value": "selector .example { display: none; }"
+    }
+  ]
+}
+```
+
+Only `custom_css` is enabled by this exception. JavaScript, PHP, HTML,
+unknown settings, stale hashes and changes outside the target section are
+blocked. CSS is limited to 20 KiB and is checked for executable markup.
 
 Commands:
 

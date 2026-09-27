@@ -15,7 +15,22 @@ permission:
   list: allow
   webfetch: allow
   edit:
-    "*": deny
+    "*": ask
+    ".opencode/**": deny
+    "AGENTS.md": deny
+    "opencode.json": deny
+    ".owe/project-file-policy.json": deny
+    "wp-admin/**": deny
+    "wp-includes/**": deny
+    "vendor/**": deny
+    "wp-content/cache/**": deny
+    "wp-content/uploads/**": deny
+    "*.env": deny
+    "*.env.*": deny
+    "*.pem": deny
+    "*.key": deny
+    "*credentials*": deny
+    "*wp-config.php": ask
     ".owe/requests/current-content.json": allow
     "./.owe/requests/current-content.json": allow
     "*/.owe/requests/current-content.json": allow
@@ -23,7 +38,7 @@ permission:
     "./.owe/requests/current.json": allow
     "*/.owe/requests/current.json": allow
   bash:
-    "*": deny
+    "*": ask
     "bash .opencode/tools/wordpress-content-bridge/bridge.sh check": allow
     "bash .opencode/tools/wordpress-content-bridge/bridge.sh inspect *": allow
     "bash .opencode/tools/wordpress-content-bridge/bridge.sh inspect-term *": allow
@@ -33,6 +48,12 @@ permission:
     "bash .opencode/tools/elementor-bridge/bridge.sh inspect-content *": allow
     "bash .opencode/tools/elementor-bridge/bridge.sh apply --request .owe/requests/current.json": allow
     "bash .opencode/tools/elementor-bridge/bridge.sh apply --request \".owe/requests/current.json\"": allow
+    "rm *": deny
+    "sudo *": deny
+    "git reset*": deny
+    "git checkout*": deny
+    "git clean*": deny
+    "git push*": deny
   task: deny
   question: deny
   external_directory: deny

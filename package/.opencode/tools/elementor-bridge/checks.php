@@ -2,6 +2,57 @@
 
 declare(strict_types=1);
 
+/**
+ * @param array<string, mixed> $request
+ * @param array<int, string> $requiredExceptions
+ */
+function owe_bridge_require_authorization(array $request, array $requiredExceptions): void
+{
+    $authorization = $request['authorization'] ?? null;
+    if (!is_array($authorization) || ($authorization['user_confirmed'] ?? null) !== true) {
+        owe_bridge_fail('USER_CONFIRMATION_REQUIRED');
+    }
+    $exceptions = $authorization['barrier_exceptions'] ?? null;
+    if (!is_array($exceptions) || array_filter($exceptions, 'is_string') !== $exceptions) {
+        owe_bridge_fail('AUTHORIZATION_SCOPE_INVALID');
+    }
+    foreach ($requiredExceptions as $requiredException) {
+        if (!in_array($requiredException, $exceptions, true)) {
+            owe_bridge_fail('AUTHORIZATION_EXCEPTION_REQUIRED:' . $requiredException);
+        }
+    }
+    $scope = $authorization['direct_scope'] ?? null;
+    if ($scope !== null && !is_array($scope)) {
+        owe_bridge_fail('AUTHORIZATION_SCOPE_INVALID');
+    }
+}
+
+/**
+ * @param array<string, mixed> $request
+ * @param array<int, string> $targetIds
+ */
+function owe_bridge_require_authorized_scope(array $request, string $operation, array $targetIds): void
+{
+    $authorization = $request['authorization'] ?? [];
+    $scope = is_array($authorization) ? ($authorization['direct_scope'] ?? null) : null;
+    if (!is_array($scope)) {
+        owe_bridge_fail('AUTHORIZATION_SCOPE_REQUIRED');
+    }
+    $operations = $scope['operations'] ?? [];
+    if (!is_array($operations) || !in_array($operation, $operations, true)) {
+        owe_bridge_fail('AUTHORIZATION_OPERATION_OUT_OF_SCOPE');
+    }
+    $widgets = $scope['widgets'] ?? [];
+    if (!is_array($widgets)) {
+        owe_bridge_fail('AUTHORIZATION_SCOPE_INVALID');
+    }
+    foreach ($targetIds as $targetId) {
+        if (!in_array($targetId, $widgets, true)) {
+            owe_bridge_fail('AUTHORIZATION_WIDGET_OUT_OF_SCOPE:' . $targetId);
+        }
+    }
+}
+
 final class OWE_Bridge_Exception extends RuntimeException
 {
     /** @var string */

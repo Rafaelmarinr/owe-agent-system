@@ -283,3 +283,60 @@ function owe_bridge_prepare_content_updates(array $updates, array $contentIndex)
     }
     return $prepared;
 }
+
+/**
+ * @param array<int, mixed> $updates
+ * @param array<string, array<string, mixed>> $styleIndex
+ * @return array<string, array<string, string>>
+ */
+function owe_bridge_prepare_style_updates(array $updates, array $styleIndex): array
+{
+    if ($updates === []) {
+        owe_bridge_fail('STYLE_UPDATES_REQUIRED');
+    }
+    if (count($updates) > 20) {
+        owe_bridge_fail('STYLE_UPDATE_LIMIT_EXCEEDED');
+    }
+
+    $prepared = [];
+    foreach ($updates as $update) {
+        if (!is_array($update)
+            || array_diff(array_keys($update), ['element_id', 'setting', 'expected_hash', 'value']) !== []
+        ) {
+            owe_bridge_fail('INVALID_STYLE_UPDATE');
+        }
+        $elementId = $update['element_id'] ?? null;
+        $setting = $update['setting'] ?? null;
+        $expectedHash = $update['expected_hash'] ?? null;
+        $value = $update['value'] ?? null;
+        if (!is_string($elementId)
+            || !preg_match('/^[a-f0-9]{6,12}$/', $elementId)
+            || $setting !== 'custom_css'
+            || !is_string($expectedHash)
+            || !preg_match('/^[a-f0-9]{64}$/', $expectedHash)
+            || !is_string($value)
+        ) {
+            owe_bridge_fail('INVALID_STYLE_UPDATE');
+        }
+        if (isset($prepared[$elementId])) {
+            owe_bridge_fail('DUPLICATE_STYLE_FIELD');
+        }
+        if (!isset($styleIndex[$elementId])) {
+            owe_bridge_fail('STYLE_FIELD_NOT_FOUND');
+        }
+        $entry = $styleIndex[$elementId];
+        if (!hash_equals((string) $entry['hash'], $expectedHash)) {
+            owe_bridge_fail('STALE_STYLE_HASH');
+        }
+        if (strlen($value) > 20000 || str_contains($value, "\0")
+            || preg_match('/<\/?(?:script|style|iframe|object)|<\?php|javascript\s*:/i', $value)
+        ) {
+            owe_bridge_fail('UNSAFE_CUSTOM_CSS');
+        }
+        $prepared[$elementId] = [
+            'old' => (string) $entry['value'],
+            'new' => $value,
+        ];
+    }
+    return $prepared;
+}
